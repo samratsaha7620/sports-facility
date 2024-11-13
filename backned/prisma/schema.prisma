@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole{
+  STUDENT
+  ADMIN
+}
+
+model User{
+  id                      String  @id @default(uuid())
+  name                    String
+  email                   String  @unique
+  phno                    String  @unique
+  emailVerified           Boolean @default(false)
+  type                    UserRole @default(STUDENT)
+  password                String
+  isEmailVerified         Boolean   @default(false)
+  forgotPasswordExpiry    DateTime?
+  emailVerificationToken  String?
+  emailVerificationExpiry DateTime?
+  applicationData         ApplicationData[]
+  memberships             ClubMembership[] 
+  
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+enum ApplicationStatus{
+  PENDING
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
+
+model ApplicationData {
+  id             String  @id @default(uuid())
+  studentId      String 
+  student        User @relation(fields: [studentId],references: [id])
+  clubId         String
+  club           Club @relation(fields: [clubId],references: [id])
+  data           Json[]
+  stage          ApplicationStatus  @default(PENDING)
+
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum EventType {
+  UPCOMING
+  PAST
+}
+
+enum ImageType {
+  CLUB
+  EVENT
+}
+
+model Club{
+  id                      String  @id @default(uuid())
+  name                    String  @unique
+  description             String
+  applicationData         ApplicationData[]
+  isApplicationPublished  Boolean  @default(false)
+  publishStartDate        DateTime?
+  publishEndDate          DateTime?
+  membershipFee           Float?
+  events                  Event[]
+  images                  Image[]
+  memberships             ClubMembership[]
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+enum MembershipStatus {
+  ACTIVE
+  DEACTIVE
+}
+
+model ClubMembership {
+  id                 String          @id @default(uuid())
+  userId             String
+  clubId             String
+  membershipStartDate DateTime       @default(now())
+  status             MembershipStatus @default(DEACTIVE)
+  user               User            @relation(fields: [userId], references: [id])
+  club               Club            @relation(fields: [clubId], references: [id])
+}
+
+model Event{
+  id                 String      @id @default(uuid())
+  title              String
+  description        String
+  date               DateTime
+  location           String
+  eventType          EventType   
+  club               Club        @relation(fields: [clubId], references: [id])
+  clubId             String
+  images             Image[]     
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
+
+model Image {
+  id                 String      @id @default(uuid())
+  url                String
+  description        String?
+  uploadDate         DateTime    @default(now())
+  imageType          ImageType   
+  club               Club?       @relation(fields: [clubId], references: [id])
+  clubId             String?
+  event              Event?      @relation(fields: [eventId], references: [id])
+  eventId            String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
