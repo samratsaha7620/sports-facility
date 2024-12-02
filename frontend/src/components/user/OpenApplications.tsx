@@ -6,6 +6,7 @@ import { AvailableClubs, availableClubsDataAtom } from '@/recoil';
 import { useEffect } from 'react';
 import axios from 'axios';
 import { BACKEND_URL } from '@/config';
+import { FaExclamationCircle } from 'react-icons/fa';
 
 const OpenApplications = () => {
   const [availableClubsData , setAvailableClubsData ]= useRecoilState<AvailableClubs[]>(availableClubsDataAtom);
@@ -23,13 +24,24 @@ const OpenApplications = () => {
     fetchData();
   },[])
   
+  if(availableClubsData.length === 0){
+    return(
+      <div className="flex flex-col items-center justify-center mt-5 space-y-4 p-3 m-5 border border-slate-400 rounded-lg">
+      <FaExclamationCircle className="text-4xl text-gray-500" /> {/* Icon */}
+      <h2 className="text-lg font-semibold text-gray-800">
+       There are no Club Applications open right now.
+      </h2>
+    </div>
+    )
+  }
+  
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 p-3 m-5 border border-slate-400 rounded-lg">
         {availableClubsData.map((club) => (
           <div
             key={club.id}
-            className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+            className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow border border-slate-700"
           >
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-xl font-semibold text-gray-800">{club.name}</h3>
@@ -48,11 +60,7 @@ const OpenApplications = () => {
               </span>
               <Button
                 onClick={() => {
-                  if(club.name === "Swimming & water sports Club"){
-                    navigate(`/${club.id}/application`)
-                  }else {
-                    navigate('/user-dashboard')
-                  }
+                  navigate(`/${club.id}/application`)
                 }}
                 className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center"
               >

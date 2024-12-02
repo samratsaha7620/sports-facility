@@ -51,31 +51,43 @@ const LoginPage = () => {
     }
   })
 
-  const onSubmit:SubmitHandler<FormInput> = (data) =>{
+  const onSubmit:SubmitHandler<FormInput> = async(data) =>{
     setIsLoading(true);
     const apiUrl = activeTab === "user" ? `${BACKEND_URL}/api/v1/users/login` :
     `${BACKEND_URL}/api/v1/admin/login`;
 
-    axios.post(apiUrl ,data)
-    .then((resp) => {
+    try {
+      const resp = await axios.post(apiUrl, data);
       const token = resp.data.token;
-      if(token){
-        localStorage.setItem("authToken" , token);
-        setUserState(({prevState}:{prevState:{}}) =>({
+
+      if (token) {
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("userRole", resp.data.user.type);
+
+        setUserState(({prevState}:{prevState:{}}) => ({
           ...prevState,
-          isAuthenticated:true,
-          userId:resp.data.user.id,
-        }))
-        toast.success("Registered");
-        navigate("/user-dashboard")
+          isAuthenticated: true,
+          userId: resp.data.user.id,
+          userType: resp.data.user.type,
+        }));
+
+        toast.success("Login successful");
+
+        if (resp.data.user.type === "STUDENT") {
+          navigate("/user-dashboard");
+        } else if(resp.data.user.type === "ADMIN"){
+          navigate("/admin-dashboard");
+        }
+      } else {
+        throw new Error("Token is missing in the response.");
       }
-    })
-    .catch((error)=>{
-      toast.error(error);
-    })
-    .finally(()=>{
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message || error.message || "Registration failed";
+      toast.error(errorMessage);
+    } finally {
       setIsLoading(false);
-    })    
+    } 
   }
   return (
     <div className='flex mt-[-70px] h-screen items-center justify-center'>
@@ -83,13 +95,13 @@ const LoginPage = () => {
       defaultValue="user" 
       onValueChange={setActiveTab}
       className="w-[400px]">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="user">User</TabsTrigger>
-          <TabsTrigger value="admin">Admin</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 border border-gray-700 bg-neutral-800">
+          <TabsTrigger  className="text-white hover:text-gray-500 transition duration-200" value="user">User</TabsTrigger>
+          <TabsTrigger className="text-white hover:text-gray-500 transition duration-200" value="admin">Admin</TabsTrigger>
         </TabsList>
 
         <TabsContent value="user">
-          <Card>
+          <Card className="border border-gray-700">
             <CardHeader>
               <CardTitle className="text-center">Login Into Your Account</CardTitle>
             </CardHeader>
@@ -100,8 +112,10 @@ const LoginPage = () => {
                 <Input 
                 {...register("email")}
                 id="email" 
-                placeholder="abc@tezu.ac.in" />
-                {errors.email && <span>{errors.email.message}</span>}
+                placeholder="abc@tezu.ac.in"
+                className="border border-gray-500"
+                />
+                {errors.email && <span className="text-red-600">{errors.email.message}</span>}
               </div>
 
               <div className="space-y-1">
@@ -110,8 +124,9 @@ const LoginPage = () => {
                 {...register("password")} 
                 id="password" 
                 type="password"
+                className="border border-gray-500"
                 placeholder="Enter your password" />
-                {errors.password && <span>{errors.password.message}</span>}
+                {errors.password && <span className="text-red-600">{errors.password.message}</span>}
               </div>
             </CardContent>
 
@@ -128,7 +143,7 @@ const LoginPage = () => {
         </TabsContent>
 
         <TabsContent value="admin">
-          <Card>
+          <Card className="border border-gray-700">
             <CardHeader>
               <CardTitle className="text-center">Admin Use Only</CardTitle>
             </CardHeader>

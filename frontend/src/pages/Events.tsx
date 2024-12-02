@@ -109,7 +109,7 @@ const Events = () => {
                 </AccordionTrigger>
                 <AccordionContent className="w-full">
                   <div className="p-2 w-2/3">
-                    <h4 className="font-semibold mb-2">Attachments</h4>
+                    <h4 className="font-semibold mb-2">{event.attachments ? "Attachments": "No Attachments"}</h4>
                     <div className="space-y-2">
                       {event.attachments?.map((attachment, index) => (
                         <a

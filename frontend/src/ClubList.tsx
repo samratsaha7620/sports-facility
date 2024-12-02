@@ -39,6 +39,7 @@ const clubs = [
   },
 ];
 
+
 const ClubList = () => {
   return (
     <div className='px-10 mt-6'>

@@ -50,7 +50,7 @@ const Navbar: React.FC = () => {
     }, []);
 
     return (
-        <nav className="bg-transparent w-full border-b border-gray-200">
+        <nav className="bg-transparent w-full border-b border-gray-200 ">
             <div className="container mx-auto flex items-center justify-between p-4 text-gray-900 px-10">               
                 <div>
                     <Link to="/">
@@ -66,7 +66,13 @@ const Navbar: React.FC = () => {
                 <div className="hidden lg:inline-block bg-gray-2 ">
                     {userState.isAuthenticated ?(
                         <div className='flex justify-center align-items-center gap-9'>
-                            <Avatar className='cursor-pointer' onClick={() => navigate("/user-dashboard")}>
+                            <Avatar className='cursor-pointer' onClick={() => {
+                                if(localStorage.getItem("userRole") === "ADMIN"){
+                                    navigate("/admin-dashboard");
+                                }else{
+                                    navigate("/user-dashboard")
+                                }
+                            }}>
                                 <AvatarImage src="/public/avatar.png" alt="@shadcn" />
                                 <AvatarFallback>User</AvatarFallback>
                             </Avatar>
@@ -78,9 +84,13 @@ const Navbar: React.FC = () => {
                                     ...prevState,
                                     isAuthenticated:false,
                                     userId: "",
+                                    userType:null,
                                     }))
                                     localStorage.removeItem("authToken");
-                                }}
+                                    localStorage.removeItem("userRole")
+                                    navigate("/")
+                                }
+                            }   
                             >
                                 Logout
                             </Button>
@@ -104,7 +114,7 @@ const Navbar: React.FC = () => {
                         <GiHamburgerMenu className='h-6 w-6'/>
                     )} 
                 </button>
-                                  
+                                    
             </div>
             {open && (
                 <div className='lg:hidden'>
@@ -120,8 +130,11 @@ const Navbar: React.FC = () => {
                                         ...prevState,
                                         isAuthenticated:false,
                                         userId: "",
+                                        userType:null,
                                         }))
                                         localStorage.removeItem("authToken");
+                                        localStorage.removeItem("userRole")
+                                        navigate("/")
                                     }}
                                 >
                                     Logout

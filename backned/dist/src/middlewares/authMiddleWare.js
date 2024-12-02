@@ -15,7 +15,7 @@ const authenticationMiddleWare = (req, res, next) => {
         //@ts-ignore
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         //@ts-ignore
-        req.user = { userId: decoded.userId };
+        req.user = decoded;
         next();
     }
     catch (error) {

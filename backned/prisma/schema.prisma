@@ -33,6 +33,7 @@ model User{
   emailVerificationExpiry DateTime?
   applicationData         ApplicationData[]
   memberships             ClubMembership[] 
+  orders                  Order[]
   
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
@@ -48,12 +49,12 @@ enum ApplicationStatus{
 model ApplicationData {
   id             String  @id @default(uuid())
   studentId      String 
-  student        User @relation(fields: [studentId],references: [id])
+  student        User @relation(fields: [studentId],references: [id], onDelete: Cascade)
   clubId         String
-  club           Club @relation(fields: [clubId],references: [id])
+  club           Club @relation(fields: [clubId],references: [id] ,onDelete: Cascade)
   data           Json[]
   stage          ApplicationStatus  @default(PENDING)
-
+  isMembershipGranted  Boolean @default(false)
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -81,6 +82,7 @@ model Club{
   events                  Event[]
   images                  Image[]
   memberships             ClubMembership[]
+  orders                  Order[]
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 }
@@ -95,9 +97,58 @@ model ClubMembership {
   userId             String
   clubId             String
   membershipStartDate DateTime       @default(now())
+  membershipValidDate DateTime    
   status             MembershipStatus @default(DEACTIVE)
-  user               User            @relation(fields: [userId], references: [id])
-  club               Club            @relation(fields: [clubId], references: [id])
+  user               User            @relation(fields: [userId], references: [id] ,onDelete: Cascade)
+  club               Club            @relation(fields: [clubId], references: [id] ,onDelete: Cascade)
+  fees               Fee[]
+}
+
+enum FeesType{
+  MONTHLY
+  ANUALLY
+  FINE
+  OTHER
+}
+
+enum FeesStatus{
+  PAID
+  PENDING
+  OVERDUE 
+}
+
+model Fee {
+  id          String   @id @default(uuid())
+  membership  ClubMembership @relation(fields: [membershipId], references: [id])
+  membershipId String
+  type        FeesType   
+  description String
+  amount      Float
+  dueDate     DateTime
+  status      FeesStatus @default(PENDING)
+  orders       Order[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order{
+  id                 String    @id @default(uuid())
+  name               String
+  amount             String
+  orderId            String    @unique
+  razorpayPaymentId  String?
+  razorpayOrderId    String?
+  razorpaySignature  String?
+  userId             String
+  clubId             String
+  feeId              String
+
+  user               User      @relation(fields: [userId], references: [id])
+  club               Club      @relation(fields: [clubId], references: [id])
+  fee                Fee       @relation(fields: [feeId], references: [id])
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model Event{
@@ -107,7 +158,7 @@ model Event{
   date               DateTime
   location           String
   eventType          EventType   
-  club               Club        @relation(fields: [clubId], references: [id])
+  club               Club        @relation(fields: [clubId], references: [id],onDelete: Cascade)
   clubId             String
   images             Image[]     
   createdAt          DateTime    @default(now())
@@ -120,10 +171,13 @@ model Image {
   description        String?
   uploadDate         DateTime    @default(now())
   imageType          ImageType   
-  club               Club?       @relation(fields: [clubId], references: [id])
+  club               Club?       @relation(fields: [clubId], references: [id],onDelete: Cascade)
   clubId             String?
-  event              Event?      @relation(fields: [eventId], references: [id])
+  event              Event?      @relation(fields: [eventId], references: [id],onDelete: Cascade)
   eventId            String?
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
 }
+
+
+

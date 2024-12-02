@@ -101,7 +101,6 @@ const SwimmingApplicationForm = ({setCurrentStep,onDatatUpdate}:{setCurrentStep:
   }
 
   const onSubmit = (data:any)=>{
-    console.log(data);
     onDatatUpdate(data);
     setCurrentStep((prev: number) => prev+1);
   }

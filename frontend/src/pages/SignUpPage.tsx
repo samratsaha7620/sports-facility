@@ -72,7 +72,7 @@ const SignUpPage = () => {
   }
   return (
     <div className='flex items-center justify-center mt-[-70px] h-screen '>
-      <Card className="w-[400px]">
+      <Card className="w-[400px] border border-gray-700">
         <CardHeader>
           <CardTitle className="text-center">Create A New Account</CardTitle>
         </CardHeader>
@@ -81,6 +81,7 @@ const SignUpPage = () => {
             <Label htmlFor="name">Name</Label>
             <Input 
             id="name" 
+            className="border border-gray-500"
             {...register('name')} 
             placeholder="samrat saha " />
             {errors.name  && 
@@ -94,7 +95,7 @@ const SignUpPage = () => {
           <div className="space-y-1">
             <Label htmlFor="email">Email</Label>
             <Input id="email"  
-            
+            className="border border-gray-500"
             {...register('email')} placeholder="abc@gamil.com" />
             {errors.email  && 
               <p className="text-red-500">
@@ -108,7 +109,7 @@ const SignUpPage = () => {
             <Label htmlFor="phono">Phone Number</Label>
             <Input 
             id="phno"
-            
+            className="border border-gray-500"
             {...register('phno')} 
             />
             {errors.phno  && 
@@ -122,7 +123,8 @@ const SignUpPage = () => {
           <div className="space-y-1">
             <Label htmlFor="password">Password</Label>
             <Input 
-            id="password"             
+            id="password"  
+            className="border border-gray-500"           
             type='password'
             {...register('password')} 
             />

@@ -16,8 +16,9 @@ export const authenticationMiddleWare = (req:AuthenticatedRequest,res:Response,n
     //@ts-ignore
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
     
+    
     //@ts-ignore
-    req.user = { userId: decoded.userId };
+    req.user = decoded;
     next();
   }catch(error){
      res.status(403).json({ message: "Forbidden" });

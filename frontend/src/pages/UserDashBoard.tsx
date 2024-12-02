@@ -3,10 +3,9 @@ import { Clock, CheckCircle, Send } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import OpenApplications from '@/components/user/OpenApplications';
 import PendingApplicants from '@/components/user/PendingApplicants';
-import { useRecoilState } from 'recoil';
-import { userAuthState } from '@/recoil';
-import { Navigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+
+import SubmittedApplications from '@/components/user/SubmittedApplications';
+import MyClubMemberships from '@/components/user/MyClubMemberships';
 
 
 interface Membership {
@@ -99,12 +98,8 @@ const pendingApplications: Application[] = [
 ];
 
 const UserDashboard = () => {
-  const [userState]  = useRecoilState(userAuthState);
+
   
-  if(!userState.isAuthenticated){
-    toast.error("Please Login into Your Account..")
-    return <Navigate to="/" replace />;
-  }
   return (
     <div className="space-y-6 px-10 mt-6 ">
       <div className="flex justify-between items-center">
@@ -131,21 +126,39 @@ const UserDashboard = () => {
       
       <div className='bg-white shadow-rounded-lg'>
         <div className='border-b'>
-        <Tabs defaultValue="memberships" className="w-full">
-          <TabsList>
-            <TabsTrigger className='mr-5' value="memberships" >My Memberships</TabsTrigger>
-            <TabsTrigger className='mr-5' value="open" >Open applications</TabsTrigger>
-            <TabsTrigger className='mr-5' value="pending" >Pending Applications</TabsTrigger>
-            <TabsTrigger className='mr-5' value="submitted">Submitted Applications</TabsTrigger>
-            
-          </TabsList>
-          <TabsContent value="memberships">Make changes to your account here.</TabsContent>
-          <TabsContent value="open"><OpenApplications /></TabsContent>
-          <TabsContent value="pending"><PendingApplicants/></TabsContent>
-          <TabsContent value="submitted">Change your password here.</TabsContent>
+          <Tabs defaultValue="memberships" className="w-full " >
+            <TabsList className="flex justify-evenly border-b border-gray-300 bg-gray-600">
+            <TabsTrigger 
+                className='mr-5 text-white hover:text-gray-800 transition duration-200' 
+                value="memberships"
+              >
+                My Memberships
+              </TabsTrigger>
+              <TabsTrigger 
+                className='mr-5  text-white hover:text-gray-800 transition duration-200' 
+                value="open"
+              >
+                Open Applications
+              </TabsTrigger>
+              <TabsTrigger 
+                className='mr-5 text-white hover:text-gray-800 transition duration-200' 
+                value="pending"
+              >
+                Pending Applications
+              </TabsTrigger>
+              <TabsTrigger 
+                className='mr-5  text-white hover:text-gray-800 transition duration-200' 
+                value="submitted"
+              >
+                Submitted Applications
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="memberships"><MyClubMemberships/></TabsContent>
+            <TabsContent value="open"><OpenApplications /></TabsContent>
+            <TabsContent value="pending"><PendingApplicants/></TabsContent>
+            <TabsContent value="submitted"><SubmittedApplications/></TabsContent>
 
-        </Tabs>
-
+          </Tabs>
         </div>
       </div>
     </div>
@@ -159,7 +172,7 @@ interface DashboardCardProps {
 }
 
 const DashboardCard = ({ title, value, icon }: DashboardCardProps) => (
-  <div className="bg-white p-6 rounded-lg shadow">
+  <div className="bg-white p-6 rounded-lg shadow border border-gray-600">
     <div className="flex justify-between items-center mb-4">
       <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
       {icon}

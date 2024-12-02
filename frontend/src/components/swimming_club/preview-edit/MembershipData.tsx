@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Image,Document, Page, Text, View, StyleSheet ,Svg ,Rect } from '@react-pdf/renderer';
 import logo from '../../../../public/tulogo.png';
-import photo from '../../../../public/photo.jpg';
+
 
 export type UserInfo = {
   membershipCategory: string;
@@ -97,11 +97,11 @@ const MembershipPDF: React.FC<Props> = ({ data }) =>{
 
   const HeaderSection = () => (
     <View style={styles.headingstyle}>
-      <View style={styles.headingSection}>
+      <View style={[styles.headingSection, { alignItems: 'center' }]}>
         <Image style={styles.logo} src={logo}/>
       </View>
-      <View style={styles.headingSection}>
-        <Text style={styles.heading}>TEZPUR UNIVERSITY, TEZPUR</Text>
+      <View style={[styles.headingSection, { alignItems: 'center' }]}>
+        <Text style={[styles.heading, { textAlign: 'center' }]}>TEZPUR UNIVERSITY, TEZPUR</Text>
         <Text 
         style={{
           fontSize: 10, 
@@ -117,7 +117,8 @@ const MembershipPDF: React.FC<Props> = ({ data }) =>{
           fontSize: 10, 
           marginBottom: 5, 
           fontWeight: 800 ,
-          paddingRight:"100px"
+          paddingRight:10,
+          textAlign:"center"
         }}>MEMBERSHIP APPLICATION FORM
         </Text>
       </View>
@@ -128,7 +129,7 @@ const MembershipPDF: React.FC<Props> = ({ data }) =>{
                 height: 80, 
                 marginBottom: 10 
             }}
-            src={photo}
+            src={data[3].myFilePath}
         />
       </View>
     </View>

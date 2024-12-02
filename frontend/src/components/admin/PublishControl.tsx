@@ -19,8 +19,11 @@ interface PublishControlProps {
 }
 
 const dateSchema = z.object({
-  endDate: z.string().refine(
-    (date) => new Date(date) >= new Date(),
+  endDate: z
+  .string()
+  .nullable()
+  .refine(
+    (date) => date === null || new Date(date) >= new Date(),
     {message:"End date cannot be before today."}
   )
 })
@@ -34,7 +37,6 @@ const PublishControl: React.FC<PublishControlProps> = ({ clubId, initialStatus})
   const [isLoading, setIsLoading] = useState(false);
 
   const handleTogglePublish = async (data:DateFormData) => {
-    console.log(data);
     setIsLoading(true);
     try {
       const endpoint = isPublished 
@@ -141,8 +143,16 @@ const DialogMemo: React.FC<DialogMemoProps> = ({ showModal,setShowModal,isPublis
           </DialogFooter>
         </form>
         ):(
-          <div>
-            <Button>Unpublish</Button>
+          <div className="grid gap-4 py-4">
+            <DialogFooter>
+              <Button
+                className="w-full"
+                onClick={() => onSubmit({ endDate: null })} // Call `onSubmit` with null endDate
+                disabled={isLoading}
+              >
+                Confirm Unpublish
+              </Button>
+            </DialogFooter>
           </div>
         )}
       </DialogContent>

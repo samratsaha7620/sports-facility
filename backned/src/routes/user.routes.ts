@@ -8,6 +8,7 @@ import { validateData } from "../middlewares/validationMiddleware";
 import { generateTemporaryToken } from "../utils/generateToken";
 import { sendEmail ,emailVerificationMailgenContent} from "../utils/mail";
 import { authenticationMiddleWare } from "../middlewares/authMiddleWare";
+import authorizeRole from "../middlewares/authorizeRole";
 
 const JWT_SECRET = process.env.JWT_SECRET || "";
 
@@ -37,7 +38,11 @@ router.post('/register',validateData(registerSchema), async(req:Request , res:Re
         password:hashedPassword,
       }
     })
-    const token = jwt.sign({userId:newUser.id},JWT_SECRET, {expiresIn:"1h"})
+    const token = jwt.sign({
+      userId:newUser.id,
+      role: newUser.type
+
+    },JWT_SECRET, {expiresIn:"1h"})
     res.status(201).json({newUser,
       token
     });
@@ -51,7 +56,7 @@ router.post('/register',validateData(registerSchema), async(req:Request , res:Re
 });
 
 
-router.post('/login', validateData(loginSchema) , async(req:Request , res:Response):Promise<void> =>{
+router.post('/login', validateData(loginSchema) , async(req:Request , res:Response) =>{
   try{
     const {email , password} = req.body;
 
@@ -70,15 +75,22 @@ router.post('/login', validateData(loginSchema) , async(req:Request , res:Respon
 
     if(!isPasswordValid){
       res.status(400).json({message:"Invalid email or password"});
+      return;
     }
 
-    const token = jwt.sign({userId:user.id}, JWT_SECRET ,{expiresIn:"1h"});
+    const token = jwt.sign({
+      userId:user.id,
+      role: user.type
+    }, JWT_SECRET ,{expiresIn:"1h"});
     res.status(200).json({ message: 'Login successful',user,token});
+    return;
   }catch(error){
     if (error instanceof ZodError) {
        res.status(400).json({ errors: error.errors });
+       return
     }
      res.status(500).json( {message: "Internal Server Error"});
+     return;
   }
 })
 
@@ -107,6 +119,46 @@ router.get('/current-user',authenticationMiddleWare as RequestHandler, async(req
      res.status(500).json({ message: 'Internal server error' });
   }
 })
+
+router.get('/user/memberships', authenticationMiddleWare,authorizeRole("STUDENT") ,async (req, res) => {
+  try {
+    //@ts-ignore
+    const userId = req.user.userId;
+
+    const memberships = await prisma.clubMembership.findMany({
+      where: { userId },
+      include: {
+        club: true,
+        fees: {
+          where: { status: { not: "PAID" } },
+        },
+      },
+    });
+
+    const clubs = memberships.map((membership) => ({
+      id: membership.club.id,
+      name: membership.club.name,
+      description: membership.club.description,
+      joinedDate: membership.membershipStartDate, // Include joined date
+      validTill: membership.membershipValidDate,
+      fees: membership.fees,
+    }));
+
+    res.status(200).json({ clubs });
+    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch memberships" });
+    return;
+  }
+});
+
+
+
+
+
+
+
 
 // router.get('/verify-email/:token',async(req:Request , res:Response):Promise<void> =>{
 //   try{

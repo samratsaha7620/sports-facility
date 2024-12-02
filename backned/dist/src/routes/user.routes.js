@@ -20,6 +20,7 @@ const zod_1 = require("zod");
 const db_1 = __importDefault(require("../db"));
 const validationMiddleware_1 = require("../middlewares/validationMiddleware");
 const authMiddleWare_1 = require("../middlewares/authMiddleWare");
+const authorizeRole_1 = __importDefault(require("../middlewares/authorizeRole"));
 const JWT_SECRET = process.env.JWT_SECRET || "";
 const router = express_1.default.Router();
 router.post('/register', (0, validationMiddleware_1.validateData)(validators_1.registerSchema), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -42,7 +43,10 @@ router.post('/register', (0, validationMiddleware_1.validateData)(validators_1.r
                 password: hashedPassword,
             }
         });
-        const token = jsonwebtoken_1.default.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: "1h" });
+        const token = jsonwebtoken_1.default.sign({
+            userId: newUser.id,
+            role: newUser.type
+        }, JWT_SECRET, { expiresIn: "1h" });
         res.status(201).json({ newUser,
             token
         });
@@ -69,15 +73,22 @@ router.post('/login', (0, validationMiddleware_1.validateData)(validators_1.logi
         const isPasswordValid = yield bcrypt_1.default.compare(password, user.password.toString());
         if (!isPasswordValid) {
             res.status(400).json({ message: "Invalid email or password" });
+            return;
         }
-        const token = jsonwebtoken_1.default.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
+        const token = jsonwebtoken_1.default.sign({
+            userId: user.id,
+            role: user.type
+        }, JWT_SECRET, { expiresIn: "1h" });
         res.status(200).json({ message: 'Login successful', user, token });
+        return;
     }
     catch (error) {
         if (error instanceof zod_1.ZodError) {
             res.status(400).json({ errors: error.errors });
+            return;
         }
         res.status(500).json({ message: "Internal Server Error" });
+        return;
     }
 }));
 router.get('/current-user', authMiddleWare_1.authenticationMiddleWare, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -100,6 +111,36 @@ router.get('/current-user', authMiddleWare_1.authenticationMiddleWare, (req, res
     }
     catch (error) {
         res.status(500).json({ message: 'Internal server error' });
+    }
+}));
+router.get('/user/memberships', authMiddleWare_1.authenticationMiddleWare, (0, authorizeRole_1.default)("STUDENT"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        //@ts-ignore
+        const userId = req.user.userId;
+        const memberships = yield db_1.default.clubMembership.findMany({
+            where: { userId },
+            include: {
+                club: true,
+                fees: {
+                    where: { status: { not: "PAID" } },
+                },
+            },
+        });
+        const clubs = memberships.map((membership) => ({
+            id: membership.club.id,
+            name: membership.club.name,
+            description: membership.club.description,
+            joinedDate: membership.membershipStartDate, // Include joined date
+            validTill: membership.membershipValidDate,
+            fees: membership.fees,
+        }));
+        res.status(200).json({ clubs });
+        return;
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to fetch memberships" });
+        return;
     }
 }));
 // router.get('/verify-email/:token',async(req:Request , res:Response):Promise<void> =>{

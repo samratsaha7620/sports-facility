@@ -16,6 +16,14 @@ import AdminApplicationManager from './components/admin/AdminApplicationManager'
 import Upload from './pages/Upload'
 import ApplicationPage from './pages/ApplicationPage'
 import SwimmingReviewEditProcess from './components/swimming_club/preview-edit'
+import FinalSubmission from './components/swimming_club/preview-edit/FinalSubmission'
+import ProtectedRoute from './components/ProtectedRoute'
+import { Suspense } from 'react'
+import ManageClubMembers from './pages/ManageClubMembers'
+import SubmittedApplicationPreview from './pages/SubmittedApplicationPreview'
+import ReviewEditProcess from './components/ReviewEditProcess'
+import ApplicationFinalSubmission from './components/ApplicationFinalSubmission'
+import AdminEventsManager from './pages/AdminEventsManager'
 
 
 function App() {
@@ -36,11 +44,53 @@ function App() {
           
           <Route path="/:clubId/application" element={<ApplicationPage />} />
           <Route path='/swimming/application/:applicationId'element={<SwimmingReviewEditProcess/>}/>
+          <Route path='/:clubName/application/:applicationId'element={<ReviewEditProcess/>}/>
+          <Route path='/swimming/application/:applicationId/final/submission' element={<FinalSubmission/>}/>
+          <Route path='/:clubName/application/:applicationId/final/submission' element={<ApplicationFinalSubmission/>}/>
+          <Route path='/:clubId/application/:applicationId/submission/preview' element={
+            <ProtectedRoute allowedRoles={["ADMIN","STUDENT"]}>
+              <SubmittedApplicationPreview/>
+            </ProtectedRoute>
+          }/>
           <Route path='/application' element={<Swimming/>}/>
-          <Route path='/user-dashboard' element={<UserDashBoard/>}/>
-          <Route path='/admin-dashboard' element={<AdminDashBoard/>}/>
-          <Route path='/admin/manage-applications' element={<ManageApplications/>}/>
-          <Route path='admin/:clubId/applications' element={<AdminApplicationManager/>}/>
+
+
+          <Route path='/user-dashboard' element={
+              <UserDashBoard/>           
+            }/>
+
+          <Route path='/admin-dashboard' element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminDashBoard/>
+            </ProtectedRoute>
+            }/>
+
+          <Route path='/admin/events' element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminEventsManager/>
+            </ProtectedRoute>
+            }/>
+
+          <Route path='/admin/manage-applications' element={
+           <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ManageApplications/>
+           </ProtectedRoute>  
+          }/>
+          
+          <Route path='/admin/manage/members' element={
+           <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ManageClubMembers/>
+           </ProtectedRoute>  
+          }/>
+
+          <Route path='admin/:clubId/applications' element={
+              <Suspense fallback={<div>Loading...</div>}>
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                  <AdminApplicationManager/>
+                </ProtectedRoute> 
+              </Suspense>
+          }/>
+          
       </Routes>
     </div>
   )
@@ -49,14 +99,4 @@ function App() {
 export default App
 
 
-
-// const PrivateRoute: React.FC<PrivateRouteProps> = ({ element, path }) => {
-//   const { isAuthenticated } = useAuth();
-
-//   return isAuthenticated ? (
-//     <Route path={path} element={element} />
-//   ) : (
-//     <Redirect to="/login" />
-//   );
-// };
 

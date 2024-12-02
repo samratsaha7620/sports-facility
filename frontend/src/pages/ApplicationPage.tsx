@@ -9,6 +9,8 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import {Link, useParams } from "react-router-dom"
 import SwimmingApplicationProcess from "@/components/swimming_club/application";
+import GymApplicationProcess from "@/components/gym_club/application";
+import ClubsApplicationProcess from "@/components/other_clubs/application";
 
 const ApplicationPage = () => {
   const [clubName,setClubName] = useState<string>("");
@@ -56,6 +58,8 @@ const ApplicationPage = () => {
   return (
     <>
       {clubName === "Swimming & water sports Club" && clubId && <SwimmingApplicationProcess clubId= {clubId}/>}
+      {clubName ===  "Gymnasium Club" && clubId && <GymApplicationProcess clubId={clubId}/>}
+      { (clubName !== "Swimming & water sports Club" && clubName !==  "Gymnasium Club") && clubId && <ClubsApplicationProcess clubId={clubId} clubName={clubName}/>}
     </>
   )
 }

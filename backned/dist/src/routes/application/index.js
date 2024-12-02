@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const db_1 = __importDefault(require("../../db"));
 const authMiddleWare_1 = require("../../middlewares/authMiddleWare");
+const client_1 = require("@prisma/client");
+const authorizeRole_1 = __importDefault(require("../../middlewares/authorizeRole"));
 const router = express_1.default.Router();
 router.get("/availableClubs", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -47,7 +49,6 @@ router.post("/add/:clubId", authMiddleWare_1.authenticationMiddleWare, (req, res
     const userId = req.user.userId;
     //@ts-ignore
     const { data } = req.body;
-    console.log(clubId, userId, data);
     try {
         const indexedEntries = Object.keys(data)
             .filter((key) => !isNaN(Number(key)))
@@ -105,6 +106,40 @@ router.get('/pending', authMiddleWare_1.authenticationMiddleWare, (req, res) => 
         res.status(500).json({ error: 'Failed to retrieve pending applications' });
     }
 }));
+router.get('/submitted', authMiddleWare_1.authenticationMiddleWare, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //@ts-ignore
+    const userId = req.user.userId;
+    try {
+        const submittedApplications = yield db_1.default.applicationData.findMany({
+            where: {
+                studentId: userId,
+                stage: "SUBMITTED",
+            },
+            include: {
+                club: {
+                    select: {
+                        name: true, // Select only the club name
+                    },
+                },
+            },
+        });
+        const data = submittedApplications.map(application => ({
+            id: application.id,
+            studentId: application.studentId,
+            clubId: application.clubId,
+            data: application.data,
+            stage: application.stage,
+            createdAt: application.createdAt,
+            updatedAt: application.updatedAt,
+            clubName: application.club.name, // Add club name here
+        }));
+        res.status(200).json(data);
+    }
+    catch (error) {
+        console.error('Error fetching Submitted applications:', error);
+        res.status(500).json({ error: 'Failed to retrieve Submitted applications' });
+    }
+}));
 router.get('/:applicationId', authMiddleWare_1.authenticationMiddleWare, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { applicationId } = req.params;
     try {
@@ -122,6 +157,95 @@ router.get('/:applicationId', authMiddleWare_1.authenticationMiddleWare, (req, r
     catch (error) {
         console.error('Error fetching pending applications:', error);
         res.status(500).json({ error: 'Failed to retrieve pending applications' });
+    }
+}));
+router.patch('/:applicationId/update', authMiddleWare_1.authenticationMiddleWare, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { applicationId } = req.params;
+        const additionalData = req.body;
+        const application = yield db_1.default.applicationData.findUnique({
+            where: {
+                id: applicationId
+            },
+        });
+        if (!application) {
+            res.status(404).json({ error: "Application not found" });
+        }
+        const updatedApplication = yield db_1.default.applicationData.update({
+            where: {
+                id: applicationId
+            },
+            data: {
+                data: {
+                    push: {
+                        additionalData,
+                    }
+                },
+                stage: client_1.ApplicationStatus.SUBMITTED,
+            }
+        });
+        res.status(200).json({
+            message: "Application data updated successfully",
+            application: updatedApplication,
+        });
+    }
+    catch (error) {
+        console.error("Error updating application data:", error);
+        res.status(500).json({ error: "Failed to update application data" });
+    }
+}));
+router.patch("/accept/:applicationId", authMiddleWare_1.authenticationMiddleWare, (0, authorizeRole_1.default)("ADMIN"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { applicationId } = req.params;
+    if (!applicationId) {
+        res.status(400).json({ error: "Application Id is required." });
+        return;
+    }
+    try {
+        const updatedApplication = yield db_1.default.applicationData.update({
+            where: {
+                id: applicationId
+            },
+            data: {
+                stage: "ACCEPTED",
+            }
+        });
+        res.status(200).json({
+            message: "Application accepted successfully.",
+            application: updatedApplication,
+        });
+        return;
+    }
+    catch (error) {
+        console.error("Error accepting application:", error);
+        res.status(500).json({ error: "Failed to accept application." });
+        return;
+    }
+}));
+router.patch("/reject/:applicationId", authMiddleWare_1.authenticationMiddleWare, (0, authorizeRole_1.default)("ADMIN"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { applicationId } = req.params;
+    if (!applicationId) {
+        res.status(400).json({ error: "Application Id is required." });
+        return;
+    }
+    try {
+        const updatedApplication = yield db_1.default.applicationData.update({
+            where: {
+                id: applicationId
+            },
+            data: {
+                stage: "REJECTED",
+            }
+        });
+        res.status(200).json({
+            message: "Application Rejected successfully.",
+            application: updatedApplication,
+        });
+        return;
+    }
+    catch (error) {
+        console.error("Error accepting application:", error);
+        res.status(500).json({ error: "Failed to Reject application." });
+        return;
     }
 }));
 exports.default = router;

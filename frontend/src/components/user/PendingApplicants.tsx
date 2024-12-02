@@ -1,4 +1,4 @@
-
+import { FaExclamationCircle } from 'react-icons/fa'; // Import an icon from react-icons
 import { BACKEND_URL } from '@/config';
 import { PendingApplicationsData, pendingApplicationsDataAtom } from '@/recoil';
 import axios from 'axios';
@@ -20,9 +20,17 @@ const PendingApplicants = () => {
     }
     fetchData();
   },[])
-  console.log(pendingClubsData);
   
-  
+  if(pendingClubsData.length === 0){
+    return(
+      <div className="flex flex-col items-center justify-center mt-5 space-y-4 p-3 m-5 border border-slate-400 rounded-lg">
+      <FaExclamationCircle className="text-4xl text-gray-500" /> {/* Icon */}
+      <h2 className="text-lg font-semibold text-gray-800">
+       There are no pending applications available.
+      </h2>
+    </div>
+    )
+  }
   return (
     <div className="space-y-6 mt-5">
       <div className="grid gap-6 md:grid-cols-2">
@@ -43,8 +51,11 @@ const PendingApplicants = () => {
             
 
             <div className="flex justify-between items-center">
-              <Link
-                to={`/swimming/application/${club.id}`
+            <Link
+                to={
+                  club.clubName === "Swimming & water sports Club"
+                    ? `/swimming/application/${club.id}`
+                    : `/${club.clubName}/application/${club.id}` // Provide an alternate path here
                 }
                 className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center"
               >
